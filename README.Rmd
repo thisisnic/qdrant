@@ -1,0 +1,69 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# qdrant
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of qdrant is to ...
+
+## Installation
+
+You can install the development version of qdrant from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("thisisnic/qdrant")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(reticulate)
+use_virtualenv("r-qdrant_client")
+devtools::load_all()
+
+# set up encoder
+
+st <- import("sentence_transformers")
+encoder <- st$SentenceTransformer('all-MiniLM-L6-v2')
+
+r_qdrant <- new_client()
+create_collection(r_qdrant, "top_wines", encoder$get_sentence_embedding_dimension())
+
+# Read the CSV file into a data frame
+df <- read.csv(system.file("top_rated_wines.csv", package="qdrant"))
+
+# Remove any rows where 'variety' is NA
+df <- df[!is.na(df$variety), ]
+
+# Randomly sample 700 rows
+set.seed(123) # Set seed for reproducibility, if needed
+sampled_indices <- sample(1:nrow(df), 700)
+data <- df[sampled_indices, ]
+
+user_prompt <- "A wine from Mendoza Argentina"
+
+upload_points(r_qdrant, "top_wines", data, encoder)
+
+encoded_prompt = encoder$encode(user_prompt)
+
+hits = search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+
+hits
+```
