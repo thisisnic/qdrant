@@ -1,3 +1,4 @@
+#' @export
 search <- function(x, collection_name, query_vector, query_filter = NULL, 
                    search_params = NULL, limit = 10L, offset = NULL, with_payload = TRUE, 
                    with_vectors = FALSE, score_threshold = NULL, append_payload = TRUE, 

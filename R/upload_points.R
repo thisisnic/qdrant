@@ -1,3 +1,4 @@
+#' @export
 upload_points <- function(x, collection_name, points, batch_size = 64, parallel = 1, method = NULL, max_retries = 3, 
                           wait = FALSE, shard_key_selector = NULL, ...) {
   

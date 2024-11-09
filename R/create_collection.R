@@ -1,3 +1,4 @@
+#' @export
 create_collection <- function(x, collection_name, vectors_config = NULL, sparse_vectors_config = NULL, 
                               shard_number = NULL, sharding_method = NULL, replication_factor = NULL, 
                               write_consistency_factor = NULL, on_disk_payload = NULL, hnsw_config = NULL,
@@ -14,6 +15,7 @@ create_collection <- function(x, collection_name, vectors_config = NULL, sparse_
 
 }
 
+#' @export
 vector_params <- function(..., size, distance, hnsw_config = NULL, quantization_config = NULL, on_disk = NULL, datatype = NULL){
   
 

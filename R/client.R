@@ -1,3 +1,4 @@
+#' @export
 qdrant <- function(location = NULL, url = NULL, port = 6333L, grpc_port = 6334L,
                           prefer_grpc = FALSE, https = NULL, api_key = NULL, prefix = NULL,
                           timeout = NULL, host = NULL, path = NULL, force_disable_check_same_thread = FALSE,
