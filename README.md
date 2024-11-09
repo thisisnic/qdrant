@@ -27,6 +27,7 @@ We start by setting up the data we want to use in our analysis.
 
 ``` r
 library(reticulate)
+reticulate::use_virtualenv("r-qdrant_client")
 devtools::load_all(".")
 #> ℹ Loading qdrant
 ```
@@ -93,13 +94,26 @@ upload_points(r_qdrant, "top_wines", encoded_data)
 And now we can search our collection using the encoded prompt!
 
 ``` r
-search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
-#> [[1]]
-#> ScoredPoint(id=616, version=0, score=0.5854496082940178, payload={'name': 'Catena Zapata Nicasia Vineyard Malbec 2004', 'region': 'Argentina', 'variety': 'Red Wine', 'rating': 96.0, 'notes': '"The single-vineyard 2004 Malbec Nicasia Vineyard is located in the Altamira district of Mendoza. It was aged for 18 months in new French oak. Opaque purple-colored, it exhibits a complex perfume of pain grille, scorched earth, mineral, licorice, blueberry, and black cherry. Thick on the palate, bordering on opulent, it has layers of fruit, silky tannins, and a long, fruit-filled finish. It will age effortlessly for another 6-8 years and provide pleasure through 2025. When all is said and done, Catena Zapata is the Argentina winery of reference – the standard of excellence for comparing all others. The brilliant, forward-thinking Nicolas Catena remains in charge, with his daughter, Laura, playing an increasingly large role. The Catena Zapata winery is an essential destination for fans of both architecture and wine in Mendoza. It is hard to believe, given the surge in popularity of Malbec in recent years, that Catena Zapata only began exporting Malbec to the United States in 1994."'}, vector=None, shard_key=None, order_value=None)
+results <- search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+for(result in results){
+  cat(paste("Score:", round(result$score, 2)), fill = TRUE)
+  cat(paste("Wine:", result$payload$name), fill = TRUE)
+  cat(paste("Region:", result$payload$region), fill = TRUE)
+  cat(paste("Notes:", result$payload$notes), fill = TRUE)
+  cat("", fill = TRUE)
+}
+#> Score: 0.59
+#> Wine: Catena Zapata Nicasia Vineyard Malbec 2004
+#> Region: Argentina
+#> Notes: "The single-vineyard 2004 Malbec Nicasia Vineyard is located in the Altamira district of Mendoza. It was aged for 18 months in new French oak. Opaque purple-colored, it exhibits a complex perfume of pain grille, scorched earth, mineral, licorice, blueberry, and black cherry. Thick on the palate, bordering on opulent, it has layers of fruit, silky tannins, and a long, fruit-filled finish. It will age effortlessly for another 6-8 years and provide pleasure through 2025. When all is said and done, Catena Zapata is the Argentina winery of reference – the standard of excellence for comparing all others. The brilliant, forward-thinking Nicolas Catena remains in charge, with his daughter, Laura, playing an increasingly large role. The Catena Zapata winery is an essential destination for fans of both architecture and wine in Mendoza. It is hard to believe, given the surge in popularity of Malbec in recent years, that Catena Zapata only began exporting Malbec to the United States in 1994."
 #> 
-#> [[2]]
-#> ScoredPoint(id=253, version=0, score=0.5812595954872024, payload={'name': 'Catena Zapata Argentino Vineyard Malbec 2004', 'region': 'Argentina', 'variety': 'Red Wine', 'rating': 98.0, 'notes': '"The single-vineyard 2004 Malbec Argentino Vineyard spent 17 months in new French oak. Remarkably fragrant and complex aromatically, it offers up aromas of wood smoke, creosote, pepper, clove, black cherry, and blackberry. Made in a similar, elegant style, it is the most structured of the three single vineyard wines, needing a minimum of a decade of additional cellaring. It should easily prove to be a 25-40 year wine. It is an exceptional achievement in Malbec. When all is said and done, Catena Zapata is the Argentina winery of reference – the standard of excellence for comparing all others. The brilliant, forward-thinking Nicolas Catena remains in charge, with his daughter, Laura, playing an increasingly large role. The Catena Zapata winery is an essential destination for fans of both architecture and wine in Mendoza. It is hard to believe, given the surge in popularity of Malbec in recent years, that Catena Zapata only began exporting Malbec to the United States in 1994."'}, vector=None, shard_key=None, order_value=None)
+#> Score: 0.58
+#> Wine: Catena Zapata Argentino Vineyard Malbec 2004
+#> Region: Argentina
+#> Notes: "The single-vineyard 2004 Malbec Argentino Vineyard spent 17 months in new French oak. Remarkably fragrant and complex aromatically, it offers up aromas of wood smoke, creosote, pepper, clove, black cherry, and blackberry. Made in a similar, elegant style, it is the most structured of the three single vineyard wines, needing a minimum of a decade of additional cellaring. It should easily prove to be a 25-40 year wine. It is an exceptional achievement in Malbec. When all is said and done, Catena Zapata is the Argentina winery of reference – the standard of excellence for comparing all others. The brilliant, forward-thinking Nicolas Catena remains in charge, with his daughter, Laura, playing an increasingly large role. The Catena Zapata winery is an essential destination for fans of both architecture and wine in Mendoza. It is hard to believe, given the surge in popularity of Malbec in recent years, that Catena Zapata only began exporting Malbec to the United States in 1994."
 #> 
-#> [[3]]
-#> ScoredPoint(id=627, version=0, score=0.5706620284928631, payload={'name': "Brovia Ca'Mia Barolo 2008", 'region': 'Barolo, Piedmont, Italy', 'variety': 'Red Wine', 'rating': 96.0, 'notes': 'We often call this cru "Il Ruffiano" for its rustic, raffish nature.  This is a boisterous, friendly Barolo from the heart of Serralunga d\'Alba with all that zone\'s lush fruit and generous body.  Here the wine thrusts us into the dense ambience of the forest: the dark berry-like fruit, the moss and underbrush, the truffles and mushrooms of the Langhe.  It\'s all there with bravado and confidence.  Warm, rich, dense … one of our best friends at the table.'}, vector=None, shard_key=None, order_value=None)
+#> Score: 0.57
+#> Wine: Brovia Ca'Mia Barolo 2008
+#> Region: Barolo, Piedmont, Italy
+#> Notes: We often call this cru "Il Ruffiano" for its rustic, raffish nature.  This is a boisterous, friendly Barolo from the heart of Serralunga d'Alba with all that zone's lush fruit and generous body.  Here the wine thrusts us into the dense ambience of the forest: the dark berry-like fruit, the moss and underbrush, the truffles and mushrooms of the Langhe.  It's all there with bravado and confidence.  Warm, rich, dense … one of our best friends at the table.
 ```

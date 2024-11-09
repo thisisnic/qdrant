@@ -37,6 +37,7 @@ We start by setting up the data we want to use in our analysis.
 
 ```{r example}
 library(reticulate)
+reticulate::use_virtualenv("r-qdrant_client")
 devtools::load_all(".")
 
 # Read the CSV file into a data frame
@@ -97,5 +98,12 @@ upload_points(r_qdrant, "top_wines", encoded_data)
 And now we can search our collection using the encoded prompt!
 
 ```{r}
-search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+results <- search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+for(result in results){
+  cat(paste("Score:", round(result$score, 2)), fill = TRUE)
+  cat(paste("Wine:", result$payload$name), fill = TRUE)
+  cat(paste("Region:", result$payload$region), fill = TRUE)
+  cat(paste("Notes:", result$payload$notes), fill = TRUE)
+  cat("", fill = TRUE)
+}
 ```
