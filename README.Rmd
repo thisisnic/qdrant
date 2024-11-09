@@ -31,20 +31,13 @@ devtools::install_github("thisisnic/qdrant")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Let's take a look at populating an in-memory vector database and then searching it.
+
+We start by setting up the data we want to use in our analysis.
 
 ```{r example}
 library(reticulate)
-use_virtualenv("r-qdrant_client")
-devtools::load_all()
-
-# set up encoder
-
-st <- import("sentence_transformers")
-encoder <- st$SentenceTransformer('all-MiniLM-L6-v2')
-
-r_qdrant <- new_client()
-create_collection(r_qdrant, "top_wines", encoder$get_sentence_embedding_dimension())
+devtools::load_all(".")
 
 # Read the CSV file into a data frame
 df <- read.csv(system.file("top_rated_wines.csv", package="qdrant"))
@@ -56,14 +49,53 @@ df <- df[!is.na(df$variety), ]
 set.seed(123) # Set seed for reproducibility, if needed
 sampled_indices <- sample(1:nrow(df), 700)
 data <- df[sampled_indices, ]
+```
 
+Next, we create the user prompt we want to use to search the data
+
+```{r}
 user_prompt <- "A wine from Mendoza Argentina"
+```
 
-upload_points(r_qdrant, "top_wines", data, encoder)
+Then we encode both the data and user prompt - here I'm using the Python `sentence_transformers` library to do this.
 
-encoded_prompt = encoder$encode(user_prompt)
+```{r}
+# set up encoder
+st <- import("sentence_transformers")
+encoder <- st$SentenceTransformer('all-MiniLM-L6-v2')
+embedding_size <- encoder$get_sentence_embedding_dimension()
 
-hits = search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+# encode input data and user prompt
+encoded_data <- construct_points(data, encoder)
 
-hits
+# Encode user prompt
+encoded_prompt <- encoder$encode(user_prompt)
+```
+
+Now we initialise a new qdrant instance in memory
+
+```{r}
+r_qdrant <- qdrant(":memory:")
+```
+
+We initialise the collection with our data
+
+```{r}
+create_collection(
+  r_qdrant,
+  "top_wines", 
+  vectors_config = vector_params(size = embedding_size, distance = "Cosine")
+)
+```
+
+We then upload our data to the collection
+
+```{r}
+upload_points(r_qdrant, "top_wines", encoded_data)
+```
+
+And now we can search our collection using the encoded prompt!
+
+```{r}
+search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
 ```

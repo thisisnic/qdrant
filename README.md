@@ -20,25 +20,15 @@ devtools::install_github("thisisnic/qdrant")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Let’s take a look at populating an in-memory vector database and then
+searching it.
+
+We start by setting up the data we want to use in our analysis.
 
 ``` r
 library(reticulate)
-use_virtualenv("r-qdrant_client")
-devtools::load_all()
+devtools::load_all(".")
 #> ℹ Loading qdrant
-```
-
-``` r
-
-# set up encoder
-
-st <- import("sentence_transformers")
-encoder <- st$SentenceTransformer('all-MiniLM-L6-v2')
-
-r_qdrant <- new_client()
-create_collection(r_qdrant, "top_wines", encoder$get_sentence_embedding_dimension())
-#> [1] TRUE
 ```
 
 ``` r
@@ -53,16 +43,57 @@ df <- df[!is.na(df$variety), ]
 set.seed(123) # Set seed for reproducibility, if needed
 sampled_indices <- sample(1:nrow(df), 700)
 data <- df[sampled_indices, ]
+```
 
+Next, we create the user prompt we want to use to search the data
+
+``` r
 user_prompt <- "A wine from Mendoza Argentina"
+```
 
-upload_points(r_qdrant, "top_wines", data, encoder)
+Then we encode both the data and user prompt - here I’m using the Python
+`sentence_transformers` library to do this.
 
-encoded_prompt = encoder$encode(user_prompt)
+``` r
+# set up encoder
+st <- import("sentence_transformers")
+encoder <- st$SentenceTransformer('all-MiniLM-L6-v2')
+embedding_size <- encoder$get_sentence_embedding_dimension()
 
-hits = search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
+# encode input data and user prompt
+encoded_data <- construct_points(data, encoder)
 
-hits
+# Encode user prompt
+encoded_prompt <- encoder$encode(user_prompt)
+```
+
+Now we initialise a new qdrant instance in memory
+
+``` r
+r_qdrant <- qdrant(":memory:")
+```
+
+We initialise the collection with our data
+
+``` r
+create_collection(
+  r_qdrant,
+  "top_wines", 
+  vectors_config = vector_params(size = embedding_size, distance = "Cosine")
+)
+#> [1] TRUE
+```
+
+We then upload our data to the collection
+
+``` r
+upload_points(r_qdrant, "top_wines", encoded_data)
+```
+
+And now we can search our collection using the encoded prompt!
+
+``` r
+search(r_qdrant, "top_wines", encoded_prompt, limit=3L)
 #> [[1]]
 #> ScoredPoint(id=616, version=0, score=0.5854496082940178, payload={'name': 'Catena Zapata Nicasia Vineyard Malbec 2004', 'region': 'Argentina', 'variety': 'Red Wine', 'rating': 96.0, 'notes': '"The single-vineyard 2004 Malbec Nicasia Vineyard is located in the Altamira district of Mendoza. It was aged for 18 months in new French oak. Opaque purple-colored, it exhibits a complex perfume of pain grille, scorched earth, mineral, licorice, blueberry, and black cherry. Thick on the palate, bordering on opulent, it has layers of fruit, silky tannins, and a long, fruit-filled finish. It will age effortlessly for another 6-8 years and provide pleasure through 2025. When all is said and done, Catena Zapata is the Argentina winery of reference – the standard of excellence for comparing all others. The brilliant, forward-thinking Nicolas Catena remains in charge, with his daughter, Laura, playing an increasingly large role. The Catena Zapata winery is an essential destination for fans of both architecture and wine in Mendoza. It is hard to believe, given the surge in popularity of Malbec in recent years, that Catena Zapata only began exporting Malbec to the United States in 1994."'}, vector=None, shard_key=None, order_value=None)
 #> 
