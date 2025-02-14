@@ -16,6 +16,7 @@ upload_points <- function(x, collection_name, points, batch_size = 64, parallel 
 }
 
 # TODO: rename this, look at keras model for doing this
+#' @export
 construct_points <- function(data, encoder){
   lapply(1:nrow(data), function(idx) {
     doc <- data[idx, ] # Extract the row as a list
